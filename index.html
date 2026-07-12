@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hafizr283 · dev telemetry</title>
+<meta name="description" content="Live coding statistics for Md. Hafizur Rahman — Codeforces, LeetCode and GitHub, fetched in real time.">
+<meta property="og:title" content="hafizr283 · dev telemetry">
+<meta property="og:description" content="Live Codeforces, LeetCode and GitHub statistics for Md. Hafizur Rahman.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d0d0d'/%3E%3Ctext x='10' y='44' font-family='monospace' font-size='30' fill='%233987e5'%3E%26gt;_%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── terminal header ─────────────────────────────── -->
+  <header class="term" aria-label="terminal header">
+    <div class="term-bar">
+      <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+      <span class="term-title">hafiz@kuet — ~/stats</span>
+    </div>
+    <div class="term-body">
+      <div class="term-line prompt-line">
+        <span class="prompt">hafiz@kuet<span class="p-sep">:</span><span class="p-path">~</span><span class="p-sep">$</span></span>
+        <span id="cmd" class="cmd"></span><span class="cursor" aria-hidden="true"></span>
+      </div>
+      <ul id="statusLines" class="status-lines" aria-live="polite"></ul>
+    </div>
+  </header>
+
+  <!-- ── identity ────────────────────────────────────── -->
+  <section class="hero reveal">
+    <h1>Md. Hafizur Rahman</h1>
+    <p class="tagline">CSE @ KUET &nbsp;·&nbsp; CUDA &amp; GPU computing &nbsp;·&nbsp; full-stack development</p>
+    <nav class="links" aria-label="profiles">
+      <a href="https://github.com/hafizr283" target="_blank" rel="noopener">github</a>
+      <a href="https://codeforces.com/profile/hafizr283" target="_blank" rel="noopener">codeforces</a>
+      <a href="https://leetcode.com/u/hafizr283/" target="_blank" rel="noopener">leetcode</a>
+      <a href="https://www.linkedin.com/in/hafizr283/" target="_blank" rel="noopener">linkedin</a>
+      <a href="mailto:hafizursiam@gmail.com">email</a>
+    </nav>
+  </section>
+
+  <!-- ── stat tiles ──────────────────────────────────── -->
+  <section id="tiles" class="tiles reveal" aria-label="headline statistics"></section>
+
+  <!-- ── charts ──────────────────────────────────────── -->
+  <main class="grid">
+
+    <article class="card wide reveal" id="cfCard">
+      <div class="card-head">
+        <h2>Codeforces rating</h2>
+        <span class="card-sub" id="cfSub"></span>
+      </div>
+      <div id="cfChart" class="chart-box"></div>
+      <details class="tbl"><summary>view data as table</summary>
+        <div class="tbl-scroll"><table id="cfTable"></table></div>
+      </details>
+    </article>
+
+    <article class="card reveal" id="lcCard">
+      <div class="card-head">
+        <h2>LeetCode solved</h2>
+        <span class="card-sub" id="lcSub"></span>
+      </div>
+      <div id="lcBars" class="bars"></div>
+      <p class="card-foot" id="lcFoot"></p>
+      <details class="tbl"><summary>view data as table</summary>
+        <div class="tbl-scroll"><table id="lcTable"></table></div>
+      </details>
+    </article>
+
+    <article class="card reveal" id="langCard">
+      <div class="card-head">
+        <h2>GitHub languages</h2>
+        <span class="card-sub" id="langSub"></span>
+      </div>
+      <div id="langBars" class="bars"></div>
+      <details class="tbl"><summary>view data as table</summary>
+        <div class="tbl-scroll"><table id="langTable"></table></div>
+      </details>
+    </article>
+
+    <article class="card wide reveal" id="contribCard">
+      <div class="card-head">
+        <h2>GitHub contributions</h2>
+        <span class="card-sub" id="contribSub"></span>
+      </div>
+      <div id="heatmap" class="heatmap-box"></div>
+      <details class="tbl"><summary>view data as table</summary>
+        <div class="tbl-scroll"><table id="contribTable"></table></div>
+      </details>
+    </article>
+
+    <article class="card wide reveal" id="repoCard">
+      <div class="card-head">
+        <h2>Selected repositories</h2>
+        <span class="card-sub" id="repoSub"></span>
+      </div>
+      <div id="repoGrid" class="repo-grid"></div>
+    </article>
+
+  </main>
+
+  <footer class="foot reveal">
+    <p>
+      Codeforces, GitHub &amp; contributions are fetched live in your browser ·
+      LeetCode is refreshed every 6 hours by GitHub Actions.
+    </p>
+    <p><span id="updatedAt"></span> · <a href="https://github.com/hafizr283/hafizr283.github.io" target="_blank" rel="noopener">source</a></p>
+  </footer>
+
+</div>
+
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+<script src="assets/main.js"></script>
+</body>
+</html>
