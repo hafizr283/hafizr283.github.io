@@ -5,7 +5,8 @@
      3. LeetCode live via a public CORS mirror, falling back to the cached snapshot */
 "use strict";
 
-const CONFIG = { github: "hafizr283", codeforces: "hafizr283", leetcode: "hafizr283" };
+const CONFIG = { github: "hafizr283", codeforces: "hafizr283", leetcode: "hafizr283",
+  atcoder: "hafizr283", uva: "hafizr283", codechef: "hafizr283", vjudge: "hafizr283" };
 
 const PAL = {
   accent: "#3987e5", good: "#0ca30c", warn: "#fab219", crit: "#d03b3b", down: "#e66767",
@@ -17,7 +18,7 @@ const PAL = {
 
 const $ = (s) => document.querySelector(s);
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const state = { cf: null, lc: null, gh: null, contrib: null, seedAt: null };
+const state = { cf: null, lc: null, gh: null, contrib: null, judges: null, seedAt: null };
 const langColor = {};   // language name -> color, shared by bars + repo dots
 
 /* ── utils ─────────────────────────────────────────────────── */
@@ -73,6 +74,7 @@ const SOURCES = [
   ["github", "github"],
   ["contribs", "contributions"],
   ["leetcode", "leetcode"],
+  ["judges", "other judges"],
 ];
 
 function initStatus() {
@@ -440,8 +442,57 @@ function renderRepos() {
   }).join("");
 }
 
+/* ── other judges ──────────────────────────────────────────── */
+
+function ccStars(rating) {
+  if (!rating) return "";
+  const bands = [1400, 1600, 1800, 2000, 2200, 2500];
+  return (bands.filter((b) => rating >= b).length + 1) + "★";
+}
+
+function renderJudges() {
+  const j = state.judges;
+  if (!j) return;
+  const tiles = [];
+  if (j.atcoder) tiles.push({
+    url: `https://atcoder.jp/users/${CONFIG.atcoder}`, name: "AtCoder",
+    value: j.atcoder.solved, sub: j.atcoder.rated
+      ? `solved · rating ${fmt(j.atcoder.rating)} (${j.atcoder.rated} rated)`
+      : "solved",
+  });
+  if (j.codechef) tiles.push({
+    url: `https://www.codechef.com/users/${CONFIG.codechef}`, name: "CodeChef",
+    value: j.codechef.rating,
+    sub: `rating · ${ccStars(j.codechef.rating)}` +
+      (j.codechef.solved ? ` · ${fmt(j.codechef.solved)} solved` : ""),
+  });
+  if (j.uva) tiles.push({
+    url: `https://uhunt.onlinejudge.org/id/${j.uva.uid || ""}`, name: "UVa",
+    value: j.uva.solved, sub: `solved · ${fmt(j.uva.subs)} submissions`,
+  });
+  if (j.vjudge) tiles.push({
+    url: `https://vjudge.net/user/${CONFIG.vjudge}`, name: "VJudge",
+    value: j.vjudge.total, sub: `solved · ${j.vjudge.perJudge.length} judges`,
+  });
+  if (!tiles.length) return;
+
+  $("#judgeSub").textContent = "AtCoder & UVa live · CodeChef & VJudge from snapshot";
+  $("#judgeGrid").innerHTML = tiles.map((t) =>
+    `<a class="judge" href="${esc(t.url)}" target="_blank" rel="noopener">` +
+    `<span class="j-name">${t.name}</span>` +
+    `<span class="j-value">${fmt(t.value)}</span>` +
+    `<span class="j-sub">${esc(t.sub)}</span></a>`).join("");
+
+  $("#judgeChips").innerHTML = (j.vjudge && j.vjudge.perJudge.length)
+    ? `<span class="chip-label">vjudge by judge ↳</span>` +
+      j.vjudge.perJudge.map(([name, n]) =>
+        `<span class="chip">${esc(name)} <b>${fmt(n)}</b></span>`).join("")
+    : "";
+}
+
 function renderAll() {
-  renderTiles(); renderCF(); renderLC(); renderLangs(); renderHeatmap(); renderRepos();
+  renderTiles(); renderCF(); renderLC(); renderLangs(); renderHeatmap();
+  renderRepos(); renderJudges();
 }
 
 /* ── live fetchers ─────────────────────────────────────────── */
@@ -526,6 +577,36 @@ async function lcLive() {
   } catch (e) { fallbackStatus("leetcode"); }
 }
 
+async function judgesLive() {
+  // Only AtCoder (kenkoooo) and UVa (uHunt) allow browser CORS;
+  // CodeChef and VJudge stay on the 6 h snapshot.
+  const [ac, uva] = await Promise.allSettled([
+    fetchJSON(`https://kenkoooo.com/atcoder/atcoder-api/v3/user/ac_rank?user=${CONFIG.atcoder}`),
+    (async () => {
+      const uid = await fetchJSON(
+        `https://uhunt.onlinejudge.org/api/uname2uid/${CONFIG.uva}`);
+      if (!uid) throw new Error("uva uid");
+      const s = await fetchJSON(`https://uhunt.onlinejudge.org/api/subs-user/${uid}`);
+      const solved = new Set(s.subs.filter((x) => x[2] === 90).map((x) => x[1])).size;
+      return { uid, solved, subs: s.subs.length };
+    })(),
+  ]);
+  const j = state.judges || (state.judges = {});
+  let ok = 0;
+  if (ac.status === "fulfilled" && typeof ac.value.count === "number") {
+    j.atcoder = Object.assign({}, j.atcoder, { solved: ac.value.count, rank: ac.value.rank });
+    ok++;
+  }
+  if (uva.status === "fulfilled") {
+    j.uva = Object.assign({}, j.uva, uva.value);
+    ok++;
+  }
+  if (ok) {
+    renderJudges();
+    setStatus("judges", "live", ok === 2 ? "ok · live" : "ok · partial");
+  } else fallbackStatus("judges");
+}
+
 /* ── boot ──────────────────────────────────────────────────── */
 
 (async function boot() {
@@ -543,6 +624,7 @@ async function lcLive() {
     } : null;
     state.gh = seed.github || null;
     state.contrib = seed.contributions || null;
+    state.judges = seed.judges || null;
     renderAll();
     for (const [key] of SOURCES) fallbackStatus(key);
   }
@@ -552,5 +634,5 @@ async function lcLive() {
       hour: "numeric", minute: "2-digit" }) +
     (seed ? ` · snapshot ${relAge(seed.fetchedAt)}` : "");
 
-  cfLive(); ghLive(); contribLive(); lcLive();
+  cfLive(); ghLive(); contribLive(); lcLive(); judgesLive();
 })();

@@ -14,6 +14,13 @@ dark terminal-styled dashboard, with zero build step and zero dependencies.
 | GitHub repos / languages | live via `api.github.com` | ✔ refreshed every 6 h |
 | Contribution heatmap | live via `github-contributions-api.jogruber.de` | ✔ refreshed every 6 h |
 | LeetCode solved | live via a public CORS mirror (best effort) | ✔ refreshed every 6 h (primary) |
+| AtCoder solved | live via `kenkoooo.com/atcoder` | ✔ refreshed every 6 h (incl. rating) |
+| UVa solved | live via `uhunt.onlinejudge.org` | ✔ refreshed every 6 h |
+| CodeChef rating / solved | — (no CORS API) | ✔ refreshed every 6 h (profile scrape) |
+| VJudge per-judge AC | — (no CORS API) | ✔ refreshed every 6 h |
+
+SPOJ blocks scripted access entirely (Cloudflare 403), but SPOJ solves done
+through VJudge appear in the VJudge per-judge breakdown.
 
 The page paints instantly from `data/stats.json`, then upgrades each card to
 live data as the API calls return — the terminal header shows which sources

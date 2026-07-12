@@ -3,7 +3,8 @@
    section is kept, so a flaky upstream never blanks the site. */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const HANDLES = { github: "hafizr283", codeforces: "hafizr283", leetcode: "hafizr283" };
+const HANDLES = { github: "hafizr283", codeforces: "hafizr283", leetcode: "hafizr283",
+  atcoder: "hafizr283", uva: "hafizr283", codechef: "hafizr283", vjudge: "hafizr283" };
 const OUT = new URL("../data/stats.json", import.meta.url);
 
 const UA = { "User-Agent": "hafizr283.github.io stats updater" };
@@ -103,7 +104,56 @@ async function contributions() {
   };
 }
 
-const sections = { codeforces, leetcode, github, contributions };
+async function judges() {
+  // one sub-try per judge so a single flaky site never blanks the rest
+  const prev = previous.judges || {};
+  const out = {};
+
+  try {                                                       // AtCoder
+    const [hist, ac] = await Promise.all([
+      getJSON(`https://atcoder.jp/users/${HANDLES.atcoder}/history/json`),
+      getJSON(`https://kenkoooo.com/atcoder/atcoder-api/v3/user/ac_rank?user=${HANDLES.atcoder}`),
+    ]);
+    const rated = hist.filter((h) => h.IsRated);
+    out.atcoder = {
+      solved: ac.count, rank: ac.rank, contests: hist.length, rated: rated.length,
+      rating: rated.length ? rated[rated.length - 1].NewRating : null,
+      maxRating: rated.length ? Math.max(...rated.map((h) => h.NewRating)) : null,
+    };
+  } catch (e) { console.warn(`keep atcoder: ${e.message}`); out.atcoder = prev.atcoder ?? null; }
+
+  try {                                                       // CodeChef (profile scrape)
+    const r = await fetch(`https://www.codechef.com/users/${HANDLES.codechef}`,
+      { headers: { ...UA, Accept: "text/html" } });
+    if (!r.ok) throw new Error(`codechef ${r.status}`);
+    const html = await r.text();
+    const rating = Number((html.match(/class="rating-number">\s*(\d+)/) || [])[1]) || null;
+    const solved = Number((html.match(/Total Problems Solved:\s*(\d+)/) || [])[1]) || null;
+    if (!rating && !solved) throw new Error("codechef markers not found");
+    out.codechef = { rating, solved };
+  } catch (e) { console.warn(`keep codechef: ${e.message}`); out.codechef = prev.codechef ?? null; }
+
+  try {                                                       // UVa via uHunt
+    const uid = await getJSON(`https://uhunt.onlinejudge.org/api/uname2uid/${HANDLES.uva}`);
+    if (!uid) throw new Error("uva user not found");
+    const s = await getJSON(`https://uhunt.onlinejudge.org/api/subs-user/${uid}`);
+    const solved = new Set(s.subs.filter((x) => x[2] === 90).map((x) => x[1])).size;
+    out.uva = { uid, solved, subs: s.subs.length };
+  } catch (e) { console.warn(`keep uva: ${e.message}`); out.uva = prev.uva ?? null; }
+
+  try {                                                       // VJudge
+    const v = await getJSON(`https://vjudge.net/user/solveDetail/${HANDLES.vjudge}`);
+    const perJudge = Object.entries(v.acRecords)
+      .map(([name, arr]) => [name, arr.length])
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    out.vjudge = { total: perJudge.reduce((a, [, n]) => a + n, 0), perJudge };
+  } catch (e) { console.warn(`keep vjudge: ${e.message}`); out.vjudge = prev.vjudge ?? null; }
+
+  return out;
+}
+
+const sections = { codeforces, leetcode, github, contributions, judges };
 const out = { fetchedAt: new Date().toISOString().replace(/\.\d+Z$/, "Z") };
 let failures = 0;
 
