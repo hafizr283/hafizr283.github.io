@@ -607,11 +607,180 @@ async function judgesLive() {
   } else fallbackStatus("judges");
 }
 
+/* ── busbooking project gallery ────────────────────────────── */
+
+const GALLERY_ITEMS = [
+  {
+    category: "booking",
+    tag: "Core Booking",
+    title: "Interactive Bus Deck & Seat Selection",
+    img: "assets/projects/busbooking/seat_select_view.png",
+    alt: "Interactive coach layout showing seat selection, status, and fare calculation",
+    desc: "Real-time visual floorplan of the coach. Passengers can select seats across decks, check availability (Available, Booked, Selected), choose boarding/dropping points, and observe dynamic fare calculation before proceeding to checkout.",
+    tags: ["Seat Map Layout", "Live Availability", "Dynamic Pricing", "Boarding Chooser", "Blade Templates"]
+  },
+  {
+    category: "booking",
+    tag: "Order Fulfillment",
+    title: "Automated PDF E-Ticket & Receipt",
+    img: "assets/projects/busbooking/downloaded_tickets.png",
+    alt: "Automated PDF bus ticket invoice with booking barcode and details",
+    desc: "Automated boarding pass and invoice generation via DomPDF upon SSLCommerz payment verification callback. Includes departure timings, passenger credentials, booking QR / barcode verification, and payment breakdown.",
+    tags: ["DomPDF Generator", "SSLCommerz Checkout", "QR & Barcode", "Automated Dispatch", "Invoice Breakdown"]
+  },
+  {
+    category: "smart",
+    tag: "Smart Feature",
+    title: "Peer-to-Peer Seat Swapping System",
+    img: "assets/projects/busbooking/seat_swapping.png",
+    alt: "Passenger seat swap request and exchange workflow interface",
+    desc: "An innovative peer-to-peer seat exchange feature allowing confirmed passengers on the same coach to request, accept, or decline seat swaps prior to journey departure, handled with transactional state management.",
+    tags: ["SeatSwapController", "Transaction Safety", "State Machine", "P2P UX", "Seat Reassignment"]
+  },
+  {
+    category: "smart",
+    tag: "Passenger Trust",
+    title: "Verified Seat & Bus Ratings",
+    img: "assets/projects/busbooking/seat_ratings_and_review.png",
+    alt: "Granular seat ratings and passenger reviews per bus and coach",
+    desc: "Granular passenger rating and feedback system measuring specific seat comfort, legroom, AC performance, cleanliness, and bus operator punctuality to empower future travelers with transparent reviews.",
+    tags: ["Star Metrics", "Granular Reviews", "Seat Comfort Breakdown", "MySQL Aggregation"]
+  },
+  {
+    category: "support",
+    tag: "AI Assistant",
+    title: "AI Helpline & Live Support Panel",
+    img: "assets/projects/busbooking/helpline_chat.png",
+    alt: "Integrated AI helpline chat panel assisting travelers",
+    desc: "Integrated in-app customer support chat offering travelers immediate guidance on trip schedules, route stops, seat swap queries, cancellation guidelines, and baggage policies.",
+    tags: ["Live Chat Widget", "AI Query Routing", "24/7 Traveler Help", "Instant Messaging"]
+  },
+  {
+    category: "support",
+    tag: "Community Feed",
+    title: "Travel Community & Journey Feed",
+    img: "assets/projects/busbooking/community_photos_also_can_comment.png",
+    alt: "Travel community social feed with coach photos and passenger comments",
+    desc: "Community engagement hub where verified travelers share authentic coach photos, road trip scenery, route experiences, and passenger tips with interactive comments and likes.",
+    tags: ["Photo Uploads", "Travel Stories", "Passenger Comments", "Social Engagement"]
+  }
+];
+
+function initProjectGallery() {
+  const modal = $("#galleryModal");
+  if (!modal) return;
+
+  const modalImg = $("#modalImg");
+  const modalTitle = $("#modalTitle");
+  const modalTag = $("#modalTag");
+  const modalCounter = $("#modalCounter");
+  const modalDesc = $("#modalDesc");
+  const modalTags = $("#modalTags");
+  const modalThumbs = $("#modalThumbs");
+  const closeBtn = $("#modalClose");
+  const backdrop = $("#modalBackdrop");
+  const prevBtn = $("#modalPrev");
+  const nextBtn = $("#modalNext");
+
+  let currentIndex = 0;
+
+  modalThumbs.innerHTML = GALLERY_ITEMS.map((item, i) =>
+    `<button class="g-thumb" data-idx="${i}" aria-label="Show screen ${i + 1}: ${esc(item.title)}">` +
+    `<img src="${esc(item.img)}" alt="" loading="lazy"></button>`
+  ).join("");
+
+  const thumbButtons = modalThumbs.querySelectorAll(".g-thumb");
+
+  function showModal(idx) {
+    currentIndex = (idx + GALLERY_ITEMS.length) % GALLERY_ITEMS.length;
+    const item = GALLERY_ITEMS[currentIndex];
+
+    modalImg.style.opacity = "0.3";
+    modalImg.src = item.img;
+    modalImg.alt = item.alt;
+    modalImg.onload = () => { modalImg.style.opacity = "1"; };
+
+    modalTitle.textContent = item.title;
+    modalTag.textContent = item.tag;
+    modalCounter.textContent = `${currentIndex + 1} / ${GALLERY_ITEMS.length}`;
+    modalDesc.textContent = item.desc;
+
+    modalTags.innerHTML = item.tags.map(t => `<span class="p-chip">${esc(t)}</span>`).join("");
+
+    thumbButtons.forEach((b, i) => {
+      b.classList.toggle("active", i === currentIndex);
+      if (i === currentIndex) {
+        b.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    });
+
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  thumbButtons.forEach(b => {
+    b.addEventListener("click", () => {
+      showModal(Number(b.dataset.idx));
+    });
+  });
+
+  const cards = document.querySelectorAll(".p-card");
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      const idx = Number(card.dataset.index);
+      showModal(idx);
+    });
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        showModal(Number(card.dataset.index));
+      }
+    });
+  });
+
+  if (prevBtn) prevBtn.addEventListener("click", (e) => { e.stopPropagation(); showModal(currentIndex - 1); });
+  if (nextBtn) nextBtn.addEventListener("click", (e) => { e.stopPropagation(); showModal(currentIndex + 1); });
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (backdrop) backdrop.addEventListener("click", closeModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (modal.hidden) return;
+    if (e.key === "Escape") closeModal();
+    else if (e.key === "ArrowLeft") showModal(currentIndex - 1);
+    else if (e.key === "ArrowRight") showModal(currentIndex + 1);
+  });
+
+  const filterBtns = document.querySelectorAll(".p-filter-btn");
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+
+      const filter = btn.dataset.filter;
+      cards.forEach(card => {
+        const cat = card.dataset.category;
+        const matches = (filter === "all" || cat === filter);
+        card.style.display = matches ? "flex" : "none";
+      });
+    });
+  });
+}
+
 /* ── boot ──────────────────────────────────────────────────── */
 
 (async function boot() {
   initStatus();
   typeCommand();
+  initProjectGallery();
 
   let seed = window.__SEED__ || null;
   if (!seed) seed = await fetchJSON("data/stats.json").catch(() => null);
