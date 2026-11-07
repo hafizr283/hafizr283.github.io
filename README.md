@@ -1,5 +1,7 @@
 # hafizr283.github.io
 
+The [UIKit Path course](http://hafizr283.me/uikit-path/) is published from the separate [uikit-path repository](https://github.com/hafizr283/uikit-path) and linked from the homepage. Its GitHub Pages project inherits this site's custom domain.
+
 Live dev-telemetry page: Codeforces, LeetCode and GitHub statistics on one
 dark terminal-styled dashboard, with zero build step and zero dependencies.
 
